@@ -3,7 +3,7 @@
  * theres a whole page bro, go read that
  *
  * @Credit
- * The Creator - @FootballTony (me)
+ * The Creator - @ToeKnee-top (me)
  *
  **/
  size(600, 600, 1);
@@ -574,9 +574,9 @@
      text("click duck to start", 147, 226);
      textSize(25);
      fill(0);
-     text("by ƬӨΣKПΣΣ", 101, 571);
+     text("by ƬӨΣKПΣΣ-top", 101, 571);
      fill(255);
-     text("by ƬӨΣKПΣΣ", 101, 573);
+     text("by ƬӨΣKПΣΣ-top", 101, 573);
      pushMatrix();
      translate(310, 301);
      rotate(-34);
