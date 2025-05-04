@@ -7,102 +7,455 @@
  *
  **/
 
-// Declare global variables
-var scene;
-var cam;
-var clicked;
-var keys = [];
-var dirts = [];
-var ducks;
-var carrott;
-var pankakes = [];
-var jurassic_grassusses = [];
-var intro_timer;
-var scene2b;
-var shake;
-var shake_time;
+// Global variables (try to minimize these if possible)
+let scene = "menu";
+let cam = {
+    x: 0,
+    y: 0
+};
 
-void setup() {
-  size(600, 600);
-  rectMode(CENTER);
-  textFont(createFont("Courier"));
-  textAlign(CENTER, CENTER);
-  
-  scene = "menu";
-  cam = new PVector(0, 0);
-  clicked = false;
-  shake = 0;
-  shake_time = 0;
-  intro_timer = 1000;
-  scene2b = "menu";
+let clicked = false;
 
-  // initialize ducks
-  ducks = new Ducks();
-  // initialize carrot
-  carrott = new Carrot();
-  // generate grass
-  for (int i=0; i<100; i++) {
-    jurassic_grassusses.push(new Grass());
-  }
-  // remove grass close to center
-  for (int i=jurassic_grassusses.size()-1; i>=0; i--) {
-    if (dist(jurassic_grassusses.get(i).x, jurassic_grassusses.get(i).y, 0, 0) < 300) {
-      jurassic_grassusses.remove(i);
+// [
+let keys = [];
+
+// dirt particles
+let dirts = [];
+// duck stats
+let ducks = {
+    x: 0,
+    y: 150,
+    d: -49,
+    speed: 2,
+    r1: 0,
+    r2: 0,
+    r3: 0,
+    r4: 0,
+    r5: 0,
+    r6: 0,
+    r7: 0,
+    walking: false,
+    pancakes: 0,
+    stamina: 100,
+    U: false,
+    D: false,
+    R: false,
+    L: false,
+};
+
+// shake
+let shake = 0;
+let shake_time = 0;
+//grass array
+let jurassic_grassusses = [];
+
+let carrott = {
+    ang: 0,
+    sz: 1,
+};
+//pancake arrays
+let pankakes = [];
+
+let intro_timer = 1000;
+let scene2b = "menu";
+
+function setup() {
+    createCanvas(600, 600, 1); 
+    rectMode(CENTER);
+    textFont("Courier");
+    textAlign(CENTER, CENTER);
+
+    // Initialize grass positions
+    for (let i = 0; i < 100; i++) {
+        jurassic_grassusses.push({
+            x: random(-1000, 1000),
+            y: random(-1000, 1000)
+        });
     }
-  }
+    for (let i = 0; i < jurassic_grassusses.length; i++) {
+        if (dist(jurassic_grassusses[i].x, jurassic_grassusses[i].y, 0, 0) < 300) {
+            jurassic_grassusses.splice(i, 1);
+        }    }
 }
 
-void draw() {
-  intro_timer += 2;
-  switch(scene) {
-    case "game": game(); break;
-    case "menu": menu(); break;
-    case "how": how(); break;
-  }
-
-  if (intro_timer < 420) {
-    pushMatrix();
-    translate(300, 300);
-    for (int i=0; i<14; i++) {
-      rotate(radians(28));
-      ducklol(0, 350 + sin(intro_timer*0.02)*300, 0, 500);
-    }
-    ducklol(0, 350 + sin(intro_timer*0.02)*300, 0, 1000);
-    popMatrix();
-    if (intro_timer == 270) {
-      scene = scene2b;
-    }
-  }
-  clicked = false;
-}
-
-// Mouse click sets clicked flag
-void mouseClicked() {
-  clicked = true;
-}
-
-// Key pressed and released
-void keyPressed() {
-  if (keyCode >= 0 && keyCode < 256) {
+function keyPressed() {
     keys[keyCode] = true;
-  }
 }
-void keyReleased() {
-  if (keyCode >= 0 && keyCode < 256) {
+
+function keyReleased() {
     keys[keyCode] = false;
-  }
+}
+//]key pressing, releasing, etc.
+
+//[
+
+//duck drawing function
+function dirt() {
+    noStroke();    for (let i = 0; i < dirts.length; i++) {
+        fill(181, 145, 103, dirts[i].opacity);
+        ellipse(dirts[i].x, dirts[i].y, dirts[i].opacity / 50, dirts[i].opacity / 50);
+        dirts[i].opacity -= 2;
+        if (dirts[i].opacity < 0) {
+            dirts.splice(i, 1);
+        }
+    }
+
 }
 
-// Classes for various entities
+function duck(x, y) {
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(x, y);
+    noStroke();
+    fill(0, 50);
+    ellipse(0, 17, 30, 20);
+    stroke(0);
+    strokeWeight(25);
+    line(ducks.r1 * 10, ducks.r2 * 5, ducks.r1 * 10, -20 + ducks.r2 * 5);
+    line(ducks.r1 * -10, -ducks.r2 * 5, ducks.r1 * 10, ducks.r2 * 5);
+    strokeWeight(16);
+    line(ducks.r3 * 5, ducks.r4 * 2, ducks.r3 * 5 + ducks.r1 * (-ducks.r6 * 3), 13 + ducks.r4 * 2 + ducks.r2 * (-ducks.r6 * 3));
+    line(ducks.r3 * -5, ducks.r4 * -2, ducks.r3 * -5 + ducks.r1 * (ducks.r6 * 3), 13 + ducks.r4 * -2 + ducks.r2 * (ducks.r6 * 3));
+    strokeWeight(15);
+    line(ducks.r1 * 20, -16 + ducks.r2 * 7, ducks.r1 * 25, -16 + ducks.r2 * 10);
+    stroke(247, 180, 37);
+    strokeWeight(13);
+    line(ducks.r3 * 5, ducks.r4 * 2, ducks.r3 * 5 + ducks.r1 * (-ducks.r6 * 3), 13 + ducks.r4 * 2 + ducks.r2 * (-ducks.r6 * 3));
+    line(ducks.r3 * -5, ducks.r4 * -2, ducks.r3 * -5 + ducks.r1 * (ducks.r6 * 3), 13 + ducks.r4 * -2 + ducks.r2 * (ducks.r6 * 3));
+    stroke(255);
+    strokeWeight(22);
+    line(ducks.r1 * 10, ducks.r2 * 5, ducks.r1 * 10, -20 + ducks.r2 * 5);
+    line(ducks.r1 * -10, -ducks.r2 * 5, ducks.r1 * 10, ducks.r2 * 5);
+    stroke(247, 180, 37);
+    strokeWeight(13);
+    line(ducks.r1 * 24, -16 + ducks.r2 * 9, ducks.r1 * 25, -16 + ducks.r2 * 10);
+    if (ducks.d % 360) {
+        strokeWeight(11 + ducks.r5 * 11);
+        if (ducks.r5 * 11 > 2) {
+            stroke(255);
+        } else {
+            noStroke();
+        }
+        line(ducks.r1 * 10, ducks.r2 * 5, ducks.r1 * 10, -20 + ducks.r2 * 5);
+    }
+    pop(); // Use pop() instead of popMatrix()
+}
+//duck interaction function
+function honk() {
+    ducks.r1 = sin(ducks.d);
+    ducks.r2 = cos(ducks.d);
+    ducks.r3 = sin(ducks.d + 90);
+    ducks.r4 = cos(ducks.d + 90);
+    ducks.r5 = sin(ducks.d + 270);
+    if (ducks.walking) {
+        ducks.r6 = cos(90 + frameCount * 10);
+        dirts.push({
+            x: ducks.x + random(-10, 10),
+            y: ducks.y + random(10, 20),
+            opacity: 255
+        });
+        ducks.r7 = sin(ducks.d + 90);
+    } else {
+        ducks.r6 = lerp(ducks.r6, 0, 0.1);
+    }
+    if (keys[87]) {
+        ducks.walking = true;
+    } else if (keys[83]) {
+        ducks.walking = true;
+    } else if (keys[65]) {
+        ducks.walking = true;
+    } else if (keys[68]) {
+        ducks.walking = true;
+    } else {
+        ducks.walking = false;
+    }
+    if (keys[87]) {
+        ducks.y -= ducks.speed;
+        ducks.U = true;
+    } else {
+        ducks.U = false;
+    }
+    if (keys[83]) {
+        ducks.y += ducks.speed;
+        ducks.D = true;
+    } else {
+        ducks.D = false;
+    }
+    if (keys[65]) {
+        ducks.x -= ducks.speed;
+        ducks.L = true;
+    } else {
+        ducks.L = false;
+    }
+    if (keys[68]) {
+        ducks.x += ducks.speed;
+        ducks.R = true;
+    } else {
+        ducks.R = false;
+    }
+    if (ducks.U) {
+        if (ducks.L) {
+            ducks.d = lerp(ducks.d, -180, 0.1);
+        } else {
+            ducks.d = lerp(ducks.d, 180, 0.1);
+        }
+    }
+    if (ducks.D) {
+        ducks.d = lerp(ducks.d, 0, 0.1);
+    }
+    if (ducks.L) {
+        ducks.d = lerp(ducks.d, -90, 0.1);
+    }
+    if (ducks.R) {
+        ducks.d = lerp(ducks.d, 90, 0.1);
+    }
+    if (keys[32]) {
+        if (ducks.stamina > 1) {
+            ducks.speed = 4;
+        } else {
+            ducks.speed = 2;
+        }
+        if (ducks.stamina > 0) {
+            ducks.stamina -= 0.2;
+        }
+    } else {
+        ducks.speed = 2;
+        if (ducks.stamina < 100) {
+            ducks.stamina += 0.3;
+        }
+    }
+}
+//menu duck
+function ducklol(x, y, r, sz) {
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(x, y);
+    rotate(r);
+    scale(sz / 400);
+    stroke(0, 0, 0);
+    strokeWeight(10);
+    fill(0, 0, 0);
+    ellipse(0, 57, 186, 100);
+    strokeWeight(176);
+    line(0, 0, 0, 267);
+    stroke(255);
+    strokeWeight(166);
+    line(0, 0, 0, 265);
+    noStroke();
+    fill(255, 217, 0);
+    ellipse(0, 57, 186, 100);
+    fill(0, 0, 0);    ellipse(-63, 3, 20, 20);
+    ellipse(63, 3, 20, 20);
+    noFill();
+    stroke(0, 0, 0);
+    strokeWeight(10);
+    arc(0, 38, 182, 67, radians(33), radians(146)); // Angles in radians
+    pop(); // Use pop() instead of popMatrix()
+}
+//]duck functions
 
-class Grass {
-  float x, y;
-  Grass() {
-    x = random(-1000, 1000);
-    y = random(-1000, 1000);
-  }
-  void display() {
-    pushMatrix();
+//[
+
+function carrot() {
+    carrott.ang = atan2(ducks.x, ducks.y - 30);
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    scale(carrott.sz);
+    stroke(0);
+    strokeWeight(3);
+    ellipse(55, 45, 30, 18);
+    ellipse(-45, 37, 30, 20);
+    ellipse(-24, 49, 27, 20);
+    ellipse(16, 47, 28, 20);
+    ellipse(48, 39, 34, 20);
+    beginShape();
+    vertex(50, 31);
+    bezierVertex(30, 51, -30, 51, -50, 31);
+    bezierVertex(-50, 31, -89, -46, -50, -70);
+    bezierVertex(-50, -70, -12, -95, 50, -70);
+    bezierVertex(89, -46, 50, 31, 50, 31);
+    endShape(CLOSE);
+    beginShape();
+    vertex(-9, -67);
+    bezierVertex(30, -195, -112, -235, -23, -75);
+    endShape();
+    beginShape();
+    vertex(4, -72);
+    bezierVertex(95, -195, -38, -262, -15, -71);
+    endShape();
+    beginShape();
+    vertex(15, -72);
+    bezierVertex(120, -195, 20, -222, 3, -68);
+    endShape();
+    noStroke();
+    fill(255, 164, 61);
+    beginShape();
+    vertex(50, 31);
+    bezierVertex(30, 51, -30, 51, -50, 31);
+    bezierVertex(-50, 31, -89, -46, -50, -70);
+    bezierVertex(-50, -70, -12, -95, 50, -70);
+    bezierVertex(89, -46, 50, 31, 50, 31);
+    endShape(CLOSE);
+    fill(232, 156, 75);
+    beginShape();
+    vertex(50, -41);
+    bezierVertex(51, -20, -30, -18, -41, -32);
+    bezierVertex(-30, -21, 51, -25, 50, -41);
+    endShape(CLOSE);
+    beginShape();
+    vertex(42, -6);
+    bezierVertex(2, -3, -49, -12, -61, -32);
+    bezierVertex(-50, 2, 18, -3, 42, -6);
+    endShape(CLOSE);
+    fill(118, 194, 113);
+    beginShape();
+    vertex(-9, -67);
+    bezierVertex(30, -195, -112, -235, -23, -75);
+    endShape();
+    fill(132, 204, 126);
+    beginShape();
+    vertex(4, -72);
+    bezierVertex(95, -195, -38, -262, -15, -71);
+    endShape();
+    fill(104, 179, 97);
+    beginShape();
+    vertex(15, -72);
+    bezierVertex(120, -195, 20, -222, 3, -68);
+    endShape();
+    fill(179, 157, 117);
+    ellipse(-28, 39, 30, 20);
+    ellipse(-5, 48, 27, 20);
+    ellipse(33, 43, 27, 20);
+    ellipse(55, 46, 30, 20);
+    fill(207, 195, 157);
+    ellipse(-45, 39, 30, 20);
+    ellipse(-24, 48, 27, 20);
+    ellipse(16, 47, 27, 20);
+    ellipse(48, 39, 30, 20);
+    pop(); // Use pop() instead of popMatrix()
+    if (dist(ducks.x, ducks.y, 0, 30) < 65 + carrott.sz * 30) {
+        ducks.x += sin(carrott.ang) * ducks.speed * 1.1;
+        ducks.y += cos(carrott.ang) * ducks.speed * 1.1;
+    }
+}
+//]carrot functions
+
+//[
+//pancake draw function
+function pancakes(x, y) {
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(x, y);
+    strokeWeight(3);
+    stroke(0);
+    ellipse(0, -1, 50, 10);
+    ellipse(-8, 0, 35, 18);
+    ellipse(8, 0, 35, 18);
+    ellipse(0, -3, 41, 15);
+    ellipse(0, -5, 41, 15);
+    ellipse(0, -8, 41, 15);
+    ellipse(0, -10, 41, 15);
+    ellipse(0, -13, 41, 15);
+    ellipse(0, -15, 41, 15);
+    ellipse(0, -18, 41, 15);
+    ellipse(0, -21, 41, 15);
+    noStroke();
+    fill(207, 207, 207);
+    ellipse(0, 0, 50, 15);
+    ellipse(0, 3, 40, 15);
+    fill(255, 253, 209);
+    ellipse(0, -3, 41, 15);
+    fill(219, 175, 134);
+    ellipse(0, -5, 41, 15);
+    fill(255, 253, 209);
+    ellipse(0, -8, 41, 15);
+    fill(219, 175, 134);
+    ellipse(0, -10, 41, 15);
+    fill(255, 253, 209);
+    ellipse(0, -13, 41, 15);
+    fill(219, 175, 134);
+    ellipse(0, -15, 41, 15);
+    fill(255, 253, 209);
+    ellipse(0, -18, 41, 15);
+    fill(219, 175, 134);
+    ellipse(0, -21, 41, 15);
+    fill(255, 253, 209);
+    quad(-10, -22, 0, -18, 9, -22, 0, -26);
+    pop(); // Use pop() instead of popMatrix()
+
+}
+//pancakes collected function
+function pancakecola(x, y) {
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(x, y);
+    strokeWeight(3);
+    stroke(0);
+    ellipse(0, -1, 50, 10);
+    ellipse(-8, 0, 35, 18);
+    ellipse(8, 0, 35, 18);
+    ellipse(0, -3, 41, 15);    for (let i = 0; i < ducks.pancakes; i++) {
+        push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+        translate(0, -4 * i);
+        ellipse(0, -3, 41, 15);
+        ellipse(0, -5, 41, 15);
+        pop(); // Use pop() instead of popMatrix()
+    }
+    noStroke();
+    fill(207, 207, 207);
+    ellipse(0, 0, 50, 15);
+    ellipse(0, 3, 40, 15);
+    for (let i = 0; i < ducks.pancakes; i++) {
+        push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+        translate(0, -4 * i);
+        fill(255, 253, 209);
+        ellipse(0, -3, 41, 15);
+        fill(219, 175, 134);
+        ellipse(0, -5, 41, 15);
+        fill(255, 253, 209);
+        quad(-10, -7, 0, -3, 9, -7, 0, -11);
+        pop(); // Use pop() instead of popMatrix()
+    }
+    pop(); // Use pop() instead of pushMatrix()
+
+}
+//pancake interaction function
+function serve_pancakes(strv, beef) {
+    if (pankakes.length < strv) {
+        for (let i = 0; i < strv - pankakes.length; i++) { // Add only the missing pancakes
+            pankakes.push({
+                x: random(-1000, 1000),
+                y: random(-1000, 1000)
+            });
+        }
+    }
+    for (let i = 0; i < pankakes.length; i++) {
+        switch (beef) {
+            case "back":
+                if (pankakes[i].y < ducks.y + 13) {
+                    pancakes(pankakes[i].x, pankakes[i].y);
+                    if (dist(ducks.x, ducks.y, pankakes[i].x, pankakes[i].y) < 40) {
+                        ducks.pancakes++;
+                        pankakes.splice(i, 1);
+                        i--; // Adjust index after splicing
+                    }
+                }
+                break;
+            case "front":
+                if (pankakes[i].y > ducks.y + 13) {
+                    pancakes(pankakes[i].x, pankakes[i].y);
+                    if (dist(ducks.x, ducks.y, pankakes[i].x, pankakes[i].y) < 40) {
+                        ducks.pancakes++;
+                        pankakes.splice(i, 1);
+                        i--; // Adjust index after splicing
+                    }
+                }
+                break;
+        }
+    }
+}
+//]pancake functions
+
+//[
+
+//grass draw function
+function grass(x, y) {
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
     translate(x, y);
     strokeWeight(2);
     stroke(0);
@@ -126,723 +479,171 @@ class Grass {
     bezierVertex(19, -3, 19, -8, 27, -15);
     bezierVertex(27, -15, 22, -4, 23, 2);
     endShape();
-    popMatrix();
-  }
+    pop(); // Use pop() instead of popMatrix()
 }
 
-class Ducks {
-  float x, y, d, speed;
-  float r1, r2, r3, r4, r5, r6, r7;
-  boolean walking, U, D, R, L;
-  int pancakes;
-  float stamina;
+//]ground functions
 
-  Ducks() {
-    x=0; y=150; d=-49; speed=2;
-    r1=0; r2=0; r3=0; r4=0; r5=0; r6=0; r7=0;
-    walking=false; pancakes=0; stamina=100;
-    U=false; D=false; R=false; L=false;
-  }
-  void display() {
-    pushMatrix();
-    translate(x, y);
+//[
+
+function game() {
+    background(149, 191, 161);
+    shake_time--;
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(cam.x + 300 + shake, cam.y + 400 + shake);
     noStroke();
-    fill(0,50);
-    ellipse(0,17,30,20);
+    fill(169, 214, 182);
+    rect(0, 0, 2000, 2000);
+    for (let i = 0; i < jurassic_grassusses.length; i++) {
+        grass(jurassic_grassusses[i].x, jurassic_grassusses[i].y);
+    }
+    serve_pancakes(20, "back");
+    dirt();
+    if (ducks.y < 30) {
+        duck(ducks.x, ducks.y, ducks.d);
+        carrot();
+    } else {
+        carrot();
+        duck(ducks.x, ducks.y, ducks.d);
+    }
+    serve_pancakes(20, "front");
+    pop(); // Use pop() instead of popMatrix()
+    if (dist(ducks.x, ducks.y, 0, 30) < 80 + carrott.sz * 30) {
+        fill(0, 50);
+        rect(300, 550, 265, 40, 5);
+        textSize(24);
+        fill(0);
+        text("\"E\" offer pancakes", 300, 550);
+        if (keys[69]) {
+            if (frameCount % 20 < 1 && ducks.pancakes > 0) {
+                ducks.pancakes--;
+                carrott.sz += 0.02;
+                shake_time = 30;            }
+        }
+    }
+    honk();
+    noStroke();
+    fill(255, 153, 0);
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(300, 400);
+    rotate(-carrott.ang + 180);
+    ellipse(0, 84, 10, 10);
+    ellipse(2, 80, 10, 10);
+    ellipse(-2, 80, 10, 10);
+    ellipse(0, 89, 5, 5);
+    ellipse(-6, 77, 5, 5);
+    ellipse(6, 77, 5, 5);
+    pop(); // Use pop() instead of popMatrix()
     stroke(0);
-    strokeWeight(25);
-    line(r1*10, r2*5, r1*10, -20 + r2*5);
-    line(r1*-10, -r2*5, r1*10, r2*5);
-    strokeWeight(16);
-    line(r3*5, r4*2, r3*5 + r1*(-r6*3), 13 + r4*2 + r2*(-r6*3));
-    line(r3*-5, r4*-2, r3*-5 + r1*(r6*3), 13 + r4*-2 + r2*(r6*3));
-    strokeWeight(15);
-    line(r1*20, -16 + r2*7, r1*25, -16 + r2*10);
-    stroke(247,180,37);
-    strokeWeight(13);
-    line(r3*5, r4*2, r3*5 + r1*(-r6*3), 13 + r4*2 + r2*(-r6*3));
-    line(r3*-5, r4*-2, r3*-5 + r1*(r6*3), 13 + r4*-2 + r2*(r6*3));
-    stroke(255);
-    strokeWeight(22);
-    line(r1*10, r2*5, r1*10, -20 + r2*5);
-    line(r1*-10, -r2*5, r1*10, r2*5);
-    stroke(247,180,37);
-    strokeWeight(13);
-    line(r1*24, -16 + r2*9, r1*25, -16 + r2*10);
-    if (d%360 != 0) {
-      strokeWeight(11 + r5*11);
-      if (r5*11 > 2) {
-        stroke(255);
-      } else {
+    fill(185, 231, 235);
+    quad(20, 580, 20, 570, 20 + ducks.stamina, 570, 25 + ducks.stamina, 580);
+    textSize(30);
+    fill(0, 0, 0);
+    text(ducks.pancakes, 50, 548);
+    pancakecola(50, 522);
+    textSize(16);
+    fill(0, 0, 0);
+    text("STAMINA", 62 + ducks.stamina, 575);
+    cam.x = lerp(cam.x, -ducks.x, 0.1);
+    cam.y = lerp(cam.y, -ducks.y, 0.1);
+    if (ducks.x > -1000 && ducks.x < 1000 && ducks.y > -1000 && ducks.y < 1000) {} else {
+        fill(0, 50);
         noStroke();
-      }
-      line(r1*10, r2*5, r1*10, -20 + r2*5);
+        rect(300, 300, 601, 601);
     }
-    popMatrix();
-  }
+    if (shake_time > 0) {
+        shake = random(-2, 2);
+    }
 }
 
-class Carrot {
-  float ang, sz;
-  Carrot() {
-    ang=0; sz=1;
-  }
-}
-
-void ducklol(float x, float y, float r, float sz) {
-  pushMatrix();
-  translate(x, y);
-  rotate(radians(r));
-  scale(sz/400);
-  stroke(0);
-  strokeWeight(10);
-  fill(0,0,0);
-  ellipse(0,57,186,100);
-  strokeWeight(176);
-  line(0,0,0,267);
-  stroke(255);
-  strokeWeight(166);
-  line(0,0,0,265);
-  noStroke();
-  fill(255,217,0);
-  ellipse(0,57,186,100);
-  fill(0);
-  ellipse(-63,3,20,20);
-  ellipse(63,3,20,20);
-  noFill();
-  stroke(0);
-  strokeWeight(10);
-  arc(0,38,182,67,radians(33),radians(146));
-  popMatrix();
-}
-
-void game() {
-  background(149,191,161);
-  shake_time--;
-  pushMatrix();
-  translate(cam.x+300+shake, cam.y+400+shake);
-  noStroke();
-  fill(169,214,182);
-  rect(0,0,2000,2000);
-  for (Grass g : jurassic_grassusses) {
-    g.display();
-  }
-  serve_pancakes(20,"back");
-  dirt();
-  if (ducks.y<30) {
-    ducks.display();
-    duck(ducks.x, ducks.y, ducks.d);
-    carrot();
-  } else {
-    carrot();
-    ducks.display();
-    duck(ducks.x, ducks.y, ducks.d);
-  }
-  serve_pancakes(20,"front");
-  pop();
-
-  if (dist(ducks.x, ducks.y, 0, 30) < 80 + carrott.sz*30) {
-    fill(0,50);
-    rect(300, 550, 265, 40, 5);
-    textSize(24);
+function menu() {
+    background(123, 86, 245);
+    textSize(50);
     fill(0);
-    text("\"E\" offer pancakes", 300, 550);
-    if (keyDown(69)) {
-      if (frameCount%20<1 && ducks.pancakes>0) {
-        ducks.pancakes--;
-        carrott.sz += 0.02;
-        shake_time=30;
-      }
-    }
-  }
-  honk();
-  noStroke();
-  fill(255,153,0);
-  pushMatrix();
-  translate(300,400);
-  rotate(-carrott.ang + PI);
-  ellipse(0,84,10,10);
-  ellipse(2,80,10,10);
-  ellipse(-2,80,10,10);
-  ellipse(0,89,5,5);
-  ellipse(-6,77,5,5);
-  ellipse(6,77,5,5);
-  popMatrix();
-
-  stroke(0);
-  fill(185,231,235);
-  rect(20,580,50+ducks.stamina,20);
-  textSize(30);
-  fill(0);
-  text(ducks.pancakes,50,548);
-  pancakecola(50,522);
-  textSize(16);
-  fill(0);
-  text("STAMINA", 62+ducks.stamina,575);
-  cam.x = lerp(cam.x, -ducks.x, 0.1);
-  cam.y = lerp(cam.y, -ducks.y, 0.1);
-  if (ducks.x<-1000 || ducks.x>1000 || ducks.y<-1000 || ducks.y>1000) {
-    fill(0,50);
-    noStroke();
-    rect(300,300,601,601);
-  }
-  if (shake_time>0) {
-    shake = random(-2,2);
-  } else {
-    shake=0;
-  }
-}
-
-void menu() {
-  background(123,86,245);
-  textSize(50);
-  fill(0);
-  text("The",150,46);
-  fill(255);
-  text("The",150,48);
-  textSize(103);
-  fill(0);
-  text("Duck",150,98);
-  fill(255);
-  text("Duck",150,100);
-  textSize(103);
-  fill(0);
-  text("Game",150,168);
-  fill(255);
-  text("Game",150,170);
-  textSize(190);
-  fill(0);
-  text("🦆",350,118);
-  fill(255);
-  text("🦆",350,120);
-  textSize(20);
-  fill(0);
-  text("click duck to start",147,224);
-  fill(255);
-  text("click duck to start",147,226);
-  textSize(25);
-  fill(0);
-  text("by ƬӨΣKПΣΣ-top",101,571);
-  fill(255);
-  text("by ƬӨΣKПΣΣ-top",101,573);
-  pushMatrix();
-  translate(310,301);
-  rotate(radians(-34));
-  if (dist(mouseX, mouseY, 310, 301) < 35) {
-    scale(1.2);
-    if (clicked) {
-      if (scene==scene2b) {
-        intro_timer=110;
-        scene2b="how";
-      }
-    }
-  } else {
-    scale(1);
-  }
-  textSize(113);
-  fill(0);
-  text("?",0,-2);
-  fill(255);
-  text("?",0,0);
-  popMatrix();
-
-  pushMatrix();
-  translate(300,450);
-  // no drawing necessary here
-  popMatrix();
-
-  if (dist(mouseX, mouseY, 381, 407) < 75) {
-    if (clicked) {
-      if (scene==scene2b) {
-        intro_timer=110;
-        scene2b="game";
-      }
-    }
-    pushMatrix();
-    translate(385,414);
-    rotate(radians(-30));
-    stroke(0);
-    strokeWeight(10);
+    text("The", 150, 46);
+    fill(255);
+    text("The", 150, 48);
+    textSize(103);
     fill(0);
-    ellipse(0,57,186,100);
-    strokeWeight(176);
-    line(0,0,0,267);
-    stroke(255);
-    strokeWeight(166);
-    line(0,0,0,265);
-    noStroke();
-    fill(255,217,0);
-    ellipse(0,57,186,100);
+    text("Duck", 150, 98);
+    fill(255);
+    text("Duck", 150, 100);
+    textSize(103);
     fill(0);
-    ellipse(-63,3,20,20);
-    ellipse(63,3,20,20);
-    noFill();
-    stroke(0);
-    strokeWeight(10);
-    arc(0,38,182,67,radians(33),radians(146));
-    popMatrix();
-  } else {
-    pushMatrix();
-    translate(399,438);
-    rotate(radians(-30));
-    stroke(0);
-    strokeWeight(10);
+    text("Game", 150, 168);
+    fill(255);
+    text("Game", 150, 170);
+    textSize(190);
     fill(0);
-    ellipse(0,57,186,100);
-    strokeWeight(176);
-    line(0,0,0,267);
-    stroke(255);
-    strokeWeight(166);
-    line(0,0,0,265);
-    noStroke();
-    fill(255,217,0);
-    ellipse(0,57,186,100);
+    text("🦆", 350, 118);
+    fill(255);
+    text("🦆", 350, 120);
+    textSize(20);
     fill(0);
-    ellipse(-63,3,20,20);
-    ellipse(63,3,20,20);
-    noFill();
-    stroke(0);
-    strokeWeight(10);
-    arc(0,38,182,67,radians(33),radians(146));
-    popMatrix();
-  }
-}
-
-void how() {
-  background(103,81,245);
-  pushMatrix();
-  translate(77,551);
-  if (dist(mouseX, mouseY, 77, 551) < 40) {
-    scale(1.2);
-    if (clicked) {
-      if (scene==scene2b) {
-        intro_timer=110;
-        scene2b="menu";
-      }
-    }
-  } else {
-    scale(1);
-  }
-  textSize(35);
-  fill(0);
-  text("Menu",0,-2);
-  fill(255);
-  text("Menu",0,0);
-  textSize(120);
-  text("⇦",-5,4);
-  popMatrix();
-  textSize(50);
-  fill(255);
-  text("how?",300,44);
-  textSize(27);
-  fill(255);
-  text("1. Be duck\n\n2. Collect pancakes,\n3. Feed said pancakes to carrot,\n4. Watch carrot grow\n5. Repeat\n\n[W]\n[A][S][D]\nto move\n\n[space] to sprint",300,329);
-  fill(255);
-  textSize(15);
-  text("the following steps are optional:",308,190);
-}
-
-// Helper functions
-
-void dirt() {
-  noStroke();
-  for (int i=dirts.size()-1; i>=0; i--) {
-    fill(181,145,103, dirts.get(i).opacity);
-    ellipse(dirts.get(i).x, dirts.get(i).y, dirts.get(i).opacity/50, dirts.get(i).opacity/50);
-    dirts.get(i).opacity -= 2;
-    if (dirts.get(i).opacity < 0) {
-      dirts.remove(i);
-    }
-  }
-}
-
-class DirtParticle {
-  float x, y;
-  float opacity;
-  DirtParticle(float xx, float yy) {
-    x=xx; y=yy; opacity=255;
-  }
-}
-
-void dirt() {
-  for (int i=dirts.size()-1; i>=0; i--) {
-    DirtParticle p=dirts.get(i);
-    fill(181,145,103,p.opacity);
-    ellipse(p.x,p.y,p.opacity/50,p.opacity/50);
-    p.opacity -= 2;
-    if (p.opacity<0) {
-      dirts.remove(i);
-    }
-  }
-}
-
-void duck(float x, float y, float d) {
-  pushMatrix();
-  translate(x,y);
-  noStroke();
-  fill(0,50);
-  ellipse(0,17,30,20);
-  stroke(0);
-  strokeWeight(25);
-  line(r1*10, r2*5, r1*10, -20 + r2*5);
-  line(r1*-10, -r2*5, r1*10, r2*5);
-  strokeWeight(16);
-  line(r3*5, r4*2, r3*5 + r1*(-r6*3), 13 + r4*2 + r2*(-r6*3));
-  line(r3*-5, r4*-2, r3*-5 + r1*(r6*3), 13 + r4*-2 + r2*(r6*3));
-  strokeWeight(15);
-  line(r1*20, -16 + r2*7, r1*25, -16 + r2*10);
-  stroke(247,180,37);
-  strokeWeight(13);
-  line(r3*5, r4*2, r3*5 + r1*(-r6*3), 13 + r4*2 + r2*(-r6*3));
-  line(r3*-5, r4*-2, r3*-5 + r1*(r6*3), 13 + r4*-2 + r2*(r6*3));
-  stroke(255);
-  strokeWeight(22);
-  line(r1*10, r2*5, r1*10, -20 + r2*5);
-  line(r1*-10, -r2*5, r1*10, r2*5);
-  stroke(247,180,37);
-  strokeWeight(13);
-  line(r1*24, -16 + r2*9, r1*25, -16 + r2*10);
-  if (d%360 != 0) {
-    strokeWeight(11 + r5*11);
-    if (r5*11 > 2) {
-      stroke(255);
-    } else {
-      noStroke();
-    }
-    line(r1*10, r2*5, r1*10, -20 + r2*5);
-  }
-  popMatrix();
-}
-
-void honk() {
-  r1 = sin(ducks.d);
-  r2 = cos(ducks.d);
-  r3 = sin(ducks.d + HALF_PI);
-  r4 = cos(ducks.d + HALF_PI);
-  r5 = sin(ducks.d + 1.5*PI);
-  if (ducks.walking) {
-    r6 = cos(PI/2 + frameCount*0.1);
-    dirts.push(new DirtParticle(ducks.x + random(-10,10), ducks.y + random(10,20)));
-    r7 = sin(ducks.d + HALF_PI);
-  } else {
-    r6 = lerp(r6, 0, 0.1);
-  }
-  // Handle movement based on keys
-  if (keyDown(87)) { // W
-    ducks.walking=true;
-    ducks.y -= ducks.speed;
-    ducks.U=true;
-  } else if (keyDown(83)) { // S
-    ducks.walking=true;
-    ducks.y += ducks.speed;
-    ducks.D=true;
-  } else {
-    ducks.walking=false;
-  }
-  if (keyDown(65)) { // A
-    ducks.walking=true;
-    ducks.x -= ducks.speed;
-    ducks.L=true;
-  }
-  if (keyDown(68)) { // D
-    ducks.walking=true;
-    ducks.x += ducks.speed;
-    ducks.R=true;
-  }
-
-  // Direction logic
-  if (ducks.U && ducks.L) {
-    ducks.d = lerpAngle(ducks.d, -PI, 0.1);
-  } else if (ducks.U && ducks.R) {
-    ducks.d = lerpAngle(ducks.d, PI/2, 0.1);
-  } else if (ducks.D && ducks.L) {
-    ducks.d = lerpAngle(ducks.d, -PI/2, 0.1);
-  } else if (ducks.D && ducks.R) {
-    ducks.d = lerpAngle(ducks.d, PI, 0.1);
-  } else if (ducks.U) {
-    ducks.d = lerpAngle(ducks.d, -PI/2, 0.1);
-  } else if (ducks.D) {
-    ducks.d = lerpAngle(ducks.d, 0, 0.1);
-  } else if (ducks.L) {
-    ducks.d = lerpAngle(ducks.d, -PI, 0.1);
-  } else if (ducks.R) {
-    ducks.d = lerpAngle(ducks.d, PI/2, 0.1);
-  }
-
-  // Sprint
-  if (keyDown(32)) { // space
-    if (ducks.stamina>1) {
-      ducks.speed=4;
-    } else {
-      ducks.speed=2;
-    }
-    if (ducks.stamina>0) {
-      ducks.stamina -= 0.2;
-    }
-  } else {
-    ducks.speed=2;
-    if (ducks.stamina<100) {
-      ducks.stamina+=0.3;
-    }
-  }
-}
-
-// Utility function for angle lerp
-float lerpAngle(float a, float b, float t) {
-  float diff = b - a;
-  while (diff > PI) { diff -= TWO_PI; }
-  while (diff < -PI) { diff += TWO_PI; }
-  return a + diff * t;
-}
-
-void pancake() {
-  pushMatrix();
-  translate(x,y);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  ellipse(0,-5,41,15);
-  ellipse(0,-8,41,15);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  ellipse(0,-15,41,15);
-  ellipse(0,-18,41,15);
-  ellipse(0,-21,41,15);
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  fill(255,253,209);
-  ellipse(0,-3,41,15);
-  fill(219,175,134);
-  ellipse(0,-5,41,15);
-  fill(255,253,209);
-  ellipse(0,-8,41,15);
-  fill(219,175,134);
-  ellipse(0,-10,41,15);
-  fill(255,253,209);
-  ellipse(0,-13,41,15);
-  fill(219,175,134);
-  ellipse(0,-15,41,15);
-  fill(255,253,209);
-  ellipse(0,-18,41,15);
-  fill(219,175,134);
-  ellipse(0,-21,41,15);
-  fill(255,253,209);
-  quad(-10,-22,0,-18,9,-22,0,-26);
-  popMatrix();
-}
-
-// Pancakes collection display
-void pancakecola(float x, float y) {
-  pushMatrix();
-  translate(x,y);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  for (int i=0; i<ducks.pancakes; i++) {
-    pushMatrix();
-    translate(0, -4*i);
-    ellipse(0,-3,41,15);
-    ellipse(0,-5,41,15);
-    popMatrix();
-  }
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  for (int i=0; i<ducks.pancakes; i++) {
-    pushMatrix();
-    translate(0, -4*i);
-    fill(255,253,209);
-    ellipse(0,-3,41,15);
-    fill(219,175,134);
-    ellipse(0,-5,41,15);
-    fill(255,253,209);
-    quad(-10,-7,0,-3,9,-7,0,-11);
-    popMatrix();
-  }
-  popMatrix();
-}
-
-void serve_pancakes(int strv, String beef) {
-  while (pankakes.size() < strv) {
-    pankakes.push(new Pancake(random(-1000,1000), random(-1000,1000)));
-  }
-  for (int i=pankakes.size()-1; i>=0; i--) {
-    Pancake p = pankakes.get(i);
-    if (beef.equals("back")) {
-      if (p.y < ducks.y + 13) {
-        pancakes(p.x,p.y);
-        if (dist(ducks.x, ducks.y, p.x,p.y) < 40) {
-          ducks.pancakes++;
-          pankakes.remove(i);
+    text("click duck to start", 147, 224);
+    fill(255);
+    text("click duck to start", 147, 226);
+    textSize(25);
+    fill(0);
+    text("by ƬӨΣKПΣΣ", 101, 571);
+    fill(255);
+    text("by ƬӨΣKПΣΣ", 101, 573);
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(310, 301);
+    rotate(-34);
+    if (dist(mouseX, mouseY, 310, 301) < 35) {
+        scale(1.2);
+        if (clicked) {
+            if (scene === scene2b) {
+                intro_timer = 110;
+                scene2b = "how";
+            }
         }
-      }
-    } else if (beef.equals("front")) {
-      if (p.y > ducks.y + 13) {
-        pancakes(p.x,p.y);
-        if (dist(ducks.x, ducks.y, p.x,p.y) < 40) {
-          ducks.pancakes++;
-          pankakes.remove(i);
-        }
-      }
+    } else {
+        scale(1);
     }
-  }
-}
-
-class Pancake {
-  float x,y;
-  Pancake(float xx, float yy) {
-    x=xx; y=yy;
-  }
-}
-
-void pancakes(float x, float y) {
-  pushMatrix();
-  translate(x,y);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  ellipse(0,-5,41,15);
-  ellipse(0,-8,41,15);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  ellipse(0,-15,41,15);
-  ellipse(0,-18,41,15);
-  ellipse(0,-21,41,15);
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  fill(255,253,209);
-  ellipse(0,-3,41,15);
-  fill(219,175,134);
-  ellipse(0,-5,41,15);
-  fill(255,253,209);
-  ellipse(0,-8,41,15);
-  fill(219,175,134);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  fill(255,253,209);
-  quad(-10,-22,0,-18,9,-22,0,-26);
-  popMatrix();
-}
-
-void pancake() {
-  pushMatrix();
-  translate(0,0);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  ellipse(0,-5,41,15);
-  ellipse(0,-8,41,15);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  ellipse(0,-15,41,15);
-  ellipse(0,-18,41,15);
-  ellipse(0,-21,41,15);
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  fill(255,253,209);
-  ellipse(0,-3,41,15);
-  fill(219,175,134);
-  ellipse(0,-5,41,15);
-  fill(255,253,209);
-  ellipse(0,-8,41,15);
-  fill(219,175,134);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  fill(255,253,209);
-  quad(-10,-22,0,-18,9,-22,0,-26);
-  popMatrix();
-}
-
-void pancake() {
-  pushMatrix();
-  translate(0,0);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  ellipse(0,-5,41,15);
-  ellipse(0,-8,41,15);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  ellipse(0,-15,41,15);
-  ellipse(0,-18,41,15);
-  ellipse(0,-21,41,15);
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  fill(255,253,209);
-  ellipse(0,-3,41,15);
-  fill(219,175,134);
-  ellipse(0,-5,41,15);
-  fill(255,253,209);
-  ellipse(0,-8,41,15);
-  fill(219,175,134);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  fill(255,253,209);
-  quad(-10,-22,0,-18,9,-22,0,-26);
-  popMatrix();
-}
-
-void pancake() {
-  pushMatrix();
-  translate(0,0);
-  strokeWeight(3);
-  stroke(0);
-  ellipse(0,-1,50,10);
-  ellipse(-8,0,35,18);
-  ellipse(8,0,35,18);
-  ellipse(0,-3,41,15);
-  ellipse(0,-5,41,15);
-  ellipse(0,-8,41,15);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  ellipse(0,-15,41,15);
-  ellipse(0,-18,41,15);
-  ellipse(0,-21,41,15);
-  noStroke();
-  fill(207,207,207);
-  ellipse(0,0,50,15);
-  ellipse(0,3,40,15);
-  fill(255,253,209);
-  ellipse(0,-3,41,15);
-  fill(219,175,134);
-  ellipse(0,-5,41,15);
-  fill(255,253,209);
-  ellipse(0,-8,41,15);
-  fill(219,175,134);
-  ellipse(0,-10,41,15);
-  ellipse(0,-13,41,15);
-  fill(255,253,209);
-  quad(-10,-22,0,-18,9,-22,0,-26);
-  popMatrix();
-}
-
-void setup() {
-  size(600, 600);
-  rectMode(CENTER);
-  textFont(createFont("Courier"));
-  textAlign(CENTER, CENTER);
-}
+    textSize(113);
+    fill(0);
+    text("?", 0, -2);
+    fill(255);
+    text("?", 0, 0);
+    pop(); // Use pop() instead of popMatrix()
+    push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+    translate(300, 450);
+    pop(); // Use pop() instead of popMatrix()
+    if (dist(mouseX, mouseY, 381, 407) < 75) {
+        if (clicked) {
+            if (scene === scene2b) {
+                intro_timer = 110;
+                scene2b = "game";
+            }
+        }
+        push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+        translate(385, 414);
+        rotate(-30);
+        stroke(0, 0, 0);
+        strokeWeight(10);
+        fill(0, 0, 0);
+        ellipse(0, 57, 186, 100);
+        strokeWeight(176);
+        line(0, 0, 0, 267);
+        stroke(255);
+        strokeWeight(166);
+        line(0, 0, 0, 265);
+        noStroke();
+        fill(255, 217, 0);
+        ellipse(0, 57, 186, 100);
+        fill(0, 0, 0);
+        ellipse(-63, 3, 20, 20);
+        ellipse(63, 3, 20, 20);
+        noFill();
+        stroke(0, 0, 0);
+        strokeWeight(10);
+        arc(0, 38, 182, 67, radians(33), radians(146)); // Angles in radians
+        pop(); // Use pop() instead of popMatrix()
+    } else {
+        push(); // Use push() and pop() instead of pushMatrix() and popMatrix()
+        translate(399, 438);
+        rotate(-30);
+        stroke(0, 0, 0);
+        strokeWeight
